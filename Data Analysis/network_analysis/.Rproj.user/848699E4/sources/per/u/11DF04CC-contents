@@ -1,0 +1,68 @@
+# Data Wrangling
+library(tidyverse) 
+
+# For graph and visualization
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(rtweet)
+#install.packages('Rcpp')
+library(Rcpp)
+
+tweets <- read.csv("df_for_network_plot.csv")
+head(tweets)
+
+tweets %>% 
+  select(party, mentioned_party)
+
+edges <- tweets %>% 
+  select(party, mentioned_party) %>% 
+  rename(
+    from = party,
+    to = mentioned_party
+  )
+
+edges <- unnest(edges, cols=to)
+
+# display 20 first rows
+head(edges, n = 20)
+
+graph <- graph_from_data_frame(edges, directed = TRUE)
+
+# print graph
+graph
+
+# calculate degree centrality
+deg <- degree(graph, mode = "in")
+
+# sort by degree centrality in descending order
+deg <- deg %>%
+  sort(decreasing = TRUE)
+
+deg %>% head(10)
+
+gorder(graph)
+
+plot(
+  graph,
+  layout = layout_with_fr(graph),
+  main="Mentions graph network ",
+  vertex.size = 4,
+  vertex.label = NA,
+  edge.arrow.size = 0,
+)
+
+big_join <- tweets %>% 
+  select(party, mentioned_party)
+
+big_join[1:500,]
+
+
+mygraph <- graph.data.frame(big_join, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = c("red", "black", "green", "yellow","blue","purple", "orange")[match(big_join$party, c("SPD", "CDU/CSU","BÃ¼ndnis 90/Die GrÃ¼nen", "FDP", "AfD", "Die Linke", "fraktionslos"))]) 
+plot(mygraph,
+     vertex.label = NA,
+     vertex.size = 2,
+     edge.arrow.size = 0.1,
+     vertex.label.cex = 0.8,
+)

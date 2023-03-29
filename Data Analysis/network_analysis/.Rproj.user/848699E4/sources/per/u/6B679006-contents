@@ -1,0 +1,41 @@
+# Data Wrangling
+library(tidyverse) 
+
+# For graph and visualization
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(rtweet)
+#install.packages('Rcpp')
+library(Rcpp)
+
+tweets <- read.csv("df_for_network_plot.csv")
+head(tweets)
+
+tweets %>% 
+  select(party, mentioned_party)
+
+
+# function to create edgelist for single MP
+count_and_group <- function(df) {
+    df %>%
+    dplyr::select(party, mentioned_party) %>% 
+    unlist() %>%
+    #tibble(interacted_with = _) %>%
+    #tidyr::drop_na() %>% 
+    dplyr::group_by(party) %>% 
+    dplyr::summarise(weight = n())  
+}
+
+# function to generate edgelist across all MPs
+create_edgelist <- function(tweet_df) {
+  tweet_df %>%
+    dplyr::nest_by(screen_name) %>%
+    dplyr::summarise(count_and_group(data)) %>%
+    # ignore interactions with self
+    dplyr::filter(screen_name != interacted_with) %>% 
+    dplyr::rename(from = screen_name, to = interacted_with)
+}
+
+# create final edgelist
+mp_edgelist <- create_edgelist(tweets)

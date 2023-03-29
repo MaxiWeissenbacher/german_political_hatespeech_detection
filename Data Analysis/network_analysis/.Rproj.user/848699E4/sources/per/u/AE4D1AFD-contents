@@ -1,0 +1,120 @@
+# Data Wrangling
+library(tidyverse) 
+
+# For graph and visualization
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(rtweet)
+#install.packages('Rcpp')
+library(Rcpp)
+
+tweets <- read.csv("df_for_network_plot.csv")
+head(tweets)
+
+tweets %>% 
+  select(party, mentioned_party)
+
+edge_df <-
+  tweets %>% 
+  select(party, mentioned_party) %>% #Step 1
+  #separate_rows(mentions_screen_name, sep = " ") %>% #Step 2
+  filter(mentioned_party != "") %>% #step 3
+  rename(from = party,
+         to = mentioned_party) #Step 4
+
+edge_df
+
+nodes_df <- data.frame(name = unique(c(edge_df$from,edge_df$to)),
+                       stringsAsFactors = F)
+head(nodes_df)
+
+graph_tweets <- tbl_graph(nodes = nodes_df,
+                          edges = edge_df,
+                          directed = F) #directed = F
+
+graph_tweets
+
+graph_tweets <- graph_tweets %>% 
+  activate(nodes) %>%
+  mutate(degree = centrality_degree(), # Degree centrality
+         between = centrality_betweenness(normalized = T), # Betweeness centrality
+         closeness = centrality_closeness(), # Closeness centrality
+         eigen = centrality_eigen() # Eigen centrality
+  )
+
+#Convert graph data into data frame
+network_act_df <- graph_tweets %>% 
+  activate(nodes) %>% 
+  as.data.frame()
+
+pop_username <- data.frame(
+  network_act_df %>% arrange(-degree) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-between) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-closeness) %>% select(name) %>% head(),
+  network_act_df %>% arrange(-eigen) %>% select(name) %>% head()
+) %>% setNames(c("Degree","Betweenness","Closeness","Eigen"))
+
+pop_username
+
+
+set.seed(123)
+graph_tweets <- graph_tweets %>% 
+  activate(nodes) %>% 
+  mutate(community = group_louvain()) %>% # clustering
+  activate(edges) %>% 
+  filter(!edge_is_loop())  # Remove loop edges
+
+graph_tweets %>% 
+  activate(nodes) %>% 
+  as.data.frame() %>% 
+  count(community)
+
+
+# fungsi untuk mendapatkan orang orang penting di tiap cluster
+important_user <- function(data) {
+  name_person <- data %>%
+    as.data.frame() %>% 
+    filter(community %in% 1:6) %>% 
+    select(-community) %>% 
+    pivot_longer(-name, names_to = "measures", values_to = "values") %>% 
+    group_by(measures) %>% 
+    arrange(desc(values)) %>% 
+    slice(1:6) %>% 
+    ungroup() %>% 
+    distinct(name) %>% 
+    pull(name)
+  
+  return(name_person)
+}
+
+#create object contain important person
+important_person <- 
+  graph_tweets %>% 
+  activate(nodes) %>% 
+  important_user()
+
+important_person
+
+install.packages("Rcpp", type = 'source')
+library(Rcpp)
+
+# Visualization using ggraph.
+set.seed(123)
+graph_tweets %>%
+  activate(nodes) %>%
+  mutate(ids = row_number(),
+         community = as.character(community)) %>%
+  filter(community %in% 1:6) %>% # number of community.
+  arrange(community,ids) %>%
+  mutate(node_label = ifelse(name %in% important_person, name,NA)) %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(alpha = 0.3 ) +
+  geom_node_point(aes(size = degree, fill = community), shape = 21, alpha = 0.7, color = "grey30") +
+  geom_node_label(aes(label = node_label), repel = T, alpha = 0.8 ) +
+  guides(size = "none") +
+  labs(title = "Party Network",
+       color = "Interaction",
+       fill = "Community") +
+  theme_void() +
+  theme(legend.position = "top")
