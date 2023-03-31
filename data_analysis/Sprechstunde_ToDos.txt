@@ -1,0 +1,7 @@
+- Gender Plot noch mit Zeitraum Plotten und schauen ob Frauen immer unter Männer sind (wäre Zeichen für Signifikanz)
+	oder ob mal Frauen oder mal Männer höher. Dann 10 Datenpunkte nehmen, oder für jede Woche und einen paired T-Test machen
+	Ergebnis ist eigentlich egal, man kann es dann eh so hindeuten wie man will.
+- Mentions on Mp-Level --> dritte Tabelle ergänzen mit dem Prozentsatz, z.B. zu viel wiel % wird Karl gementioned --> DONE
+- Erkenntnis: Ist HOf hochgegangen? Zeigt der vergleich von Control- und Baseline Datensatz. In Future Work schreiben, dass das genauer untersucht
+	werden könnte
+- In die Arbeit Beispiele für HOF Tweets einbauen, und auch Beispiele wo es nicht perfekt predicted hat.

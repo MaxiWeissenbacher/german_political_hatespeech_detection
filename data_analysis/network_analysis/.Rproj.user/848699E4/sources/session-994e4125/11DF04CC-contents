@@ -1,0 +1,148 @@
+library(igraph)
+library(dplyr)
+library(tm)
+library(networkD3)
+library(visNetwork)
+library(htmlwidgets)
+
+tweets <- read.csv("df_for_network_plot.csv", encoding="UTF-8")
+
+#tweets <- tweets[sample(nrow(tweets), 500), ]
+
+nrow(politicans)
+ncol(politicans)
+head(politicans)
+
+# Hier Netzwerk: Politiker + seine Partei Mentioned anderen Politiker
+politicans <- tweets %>%
+  select(username,mentioned_user, party)
+
+head(politicans)
+unique(politicans$party)
+#colors <-  c("red","#00FF33", "black", "#33CCFF", "purple", "yellow", "white")
+colors <-  c("#33CCFF","black", "yellow", "white", "#00FF33", "purple", "red")
+
+# Graph for: Welcher User von der jeweiligen Partei hat einen anderen Politiker erwähnt
+mygraph <- graph.data.frame(politicans, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(politicans$party, unique(politicans$party))])
+png("who_mentions_who.png", 1000, 1000)
+plot(mygraph,
+       #vertex.label.color = "blue",
+       vertex.label = NA,
+       vertex.size = 1,
+       edge.arrow.size = 0.1,
+       vertex.label.cex = 0.5,
+)
+dev.off()
+saveWidget(visIgraph(mygraph), file = "who_mentions_who.html")
+
+
+#########
+# Netwerk: Wer wird gementioned
+head(tweets)
+politicans1 <- tweets %>%
+  select(mentioned_user,username, mentioned_party)
+
+mygraph1 <- graph.data.frame(politicans1, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(politicans1$mentioned_party, unique(politicans1$mentioned_party))])
+png("who_is_mentioned_by_whom.png", 1000, 1000)
+plot(
+  mygraph1,
+    #vertex.label.color = "blue",
+    vertex.label = NA,
+    vertex.size = 1,
+    edge.arrow.size = 0.1,
+    vertex.label.cex = 0.8,
+)
+dev.off()
+#title("Who is mentioned by whom?",cex.main=0.8,col.main="black")
+saveWidget(visIgraph(mygraph1), file = "who_is_mentioned_by_whom.html")
+
+
+############
+# Nur HOF Netwerk: Wer spreaded HOF
+hof <- subset(tweets, Label == "HOF")
+hof <- hof %>%
+  select(username,mentioned_user, party)
+
+head(hof)
+unique(hof$party)
+#colors <-  c("red","#00FF33", "black", "#33CCFF", "purple", "yellow", "white")
+colors <-  c("#33CCFF","black", "yellow", "white", "#00FF33", "purple", "red")
+
+# Graph for: Welcher User von der jeweiligen Partei hat einen anderen Politiker erwähnt
+mygraph2 <- graph.data.frame(hof, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(hof$party, unique(hof$party))])
+png("who_spreads_hof.png", 1000, 1000)
+plot(mygraph2,
+     #vertex.label.color = "blue",
+     vertex.label = NA,
+     vertex.size = 1,
+     edge.arrow.size = 0.1,
+     vertex.label.cex = 0.8,
+)
+dev.off()
+saveWidget(visIgraph(mygraph2), file = "who_spreads_hof.html")
+
+#######
+#Who receives Hate
+hof <- subset(tweets, Label == "HOF")
+hof <- hof %>%
+  select(mentioned_user, username, mentioned_party)
+# Graph for: Welcher User von der jeweiligen Partei hat einen anderen Politiker erwähnt
+mygraph3 <- graph.data.frame(hof, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(hof$mentioned_party, unique(hof$mentioned_party))])
+png("who_receives_hof.png", 1000, 1000)
+plot(mygraph3,
+     #vertex.label.color = "blue",
+     vertex.label = NA,
+     vertex.size = 1,
+     edge.arrow.size = 0.1,
+     vertex.label.cex = 0.8,
+)
+dev.off()
+#title("Who receives HOF language?",cex.main=0.8,col.main="black")
+saveWidget(visIgraph(mygraph3), file = "who_receives_hof.html")
+
+
+# Nur auf Karl Lauterbach bezogen:
+hof <- subset(tweets, Label == "HOF")
+hof <- subset(hof, mentioned_user == "karl_lauterbach")
+hof <- hof %>%
+  select(username,mentioned_user, party)
+head(hof)
+
+mygraph4 <- graph.data.frame(hof, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(hof$party, unique(hof$party))])
+png("who_hofs_karl.png", 1000, 1000)
+plot(mygraph4,
+     vertex.label.color = "#808080",
+     #vertex.label = NA,
+     vertex.size = 1,
+     edge.arrow.size = 0.1,
+     vertex.label.cex = 1,
+)
+dev.off()
+#title("Who is offending Prof. Dr. Karl Lauterbach?",cex.main=0.8,col.main="black")
+saveWidget(visIgraph(mygraph4), file = "who_hofs_karl.html")
+
+# Nur auf Olaf Scholz bezogen:
+hof <- subset(tweets, Label == "HOF")
+hof <- subset(hof, mentioned_user == "olafscholz")
+hof <- hof %>%
+  select(username,mentioned_user, party)
+head(hof)
+
+mygraph5 <- graph.data.frame(hof, directed = TRUE) %>%
+  set_edge_attr(name = "color", value = colors[match(hof$party, unique(hof$party))])
+png("who_hofs_scholz.png", 1000, 1000)
+plot(mygraph5,
+     vertex.label.color = "#808080",
+     #vertex.label = NA,
+     vertex.size = 2,
+     edge.arrow.size = 0.1,
+     vertex.label.cex = 1,
+)
+dev.off()
+#title("Who is offending Olaf Scholz?",cex.main=0.8,col.main="black")
+saveWidget(visIgraph(mygraph5), file = "who_hofs_scholz.html")
