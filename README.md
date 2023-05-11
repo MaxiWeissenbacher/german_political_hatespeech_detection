@@ -1,7 +1,7 @@
 # Offensive Language and Hate Speech Identification in a Political Discourse Using German politicians as a Case Study
 
 This is my repository for my Masterthesis about Hatespeech Detection in a Politial Discourse in Germany.
-The link to the thesis will be added soon.
+The link/pdf to the thesis will be added soon.
 
 ## Folder - BertTopic:
 - This folder consists of a topic plot over time. This plot was used to determine which time frames should be scraped.
@@ -22,6 +22,7 @@ The link to the thesis will be added soon.
 - "Scraping.ipynb": Scraping of tweets from MPs
 - "Mentions_Scraping.ipynb": Scraping of tweets where a MP gets mentioned
 - "Data_Concat.ipynb": Putting all datasets from the scraping proccess together into one dataframe
+- "retrieve_tweets.ipynb": Reproducing the dataset. Fetch all the Tweets contents with the Tweet ID.
 
 ## Folder - Datasets:
 
