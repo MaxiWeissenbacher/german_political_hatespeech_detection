@@ -19,6 +19,7 @@ groups = ['<select>',"Group1", "Group2", "Group3"]
 default_groups = groups.index("<select>")
 group = st.selectbox("Please choose the group you have been selected for", groups, index=default_groups)
 
+# Choose a different dataset, depending which group an Annotator was assigned
 if group == "Group1":
     df = pd.read_excel('annotation_batch_2.xlsx')
     df = df[:250]
@@ -32,7 +33,8 @@ else:
     df = pd.read_excel('annotation_batch_3.xlsx')
     indexlist = list(range(0,250))
     df["Column1"] = indexlist
-   
+
+# Move to the next Tweet and save it on AWS S3, if the user pressed the submit key
 def submit():
     st.session_state.label_list.append(st.session_state.label_input)
     df["Label"][st.session_state.count] = st.session_state.label_input
@@ -44,11 +46,12 @@ def success_message():
     st.write("Progress: ", st.session_state.count, "/", len(df))
     st.success("Thank you! All done!")
 
+# Initialize the Session State, so the Annotation Starts with the first Tweet
 if st.session_state.get('count') is None:
     st.session_state.count = 0
     st.session_state.label_list = []
 
-
+# If the password is correct, the user can start, else he is not able to do the annotation
 if password == st.secrets["access_pw"]:
     st.session_state['state']=0
 else:
@@ -101,6 +104,9 @@ def form_submit():
         st.error("Please provide the right password or ask the administrator for help!")
 
 
+# Check if the user has already started the task and comes back
+# If he already annotated some tweets, he can continue where he stopped
+# If not he starts at 3
 if s3.exists(f"{bucket_name}/{group}_label_list_{prolificid}.csv"):
     with s3.open(f"{bucket_name}/{group}_label_list_{prolificid}.csv",'r') as file:
         df_old = pd.read_csv(file)
